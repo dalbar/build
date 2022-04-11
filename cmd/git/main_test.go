@@ -20,6 +20,22 @@ import (
 	shpgit "github.com/shipwright-io/build/pkg/git"
 )
 
+var _ = BeforeSuite(func() {
+	git_config := os.Getenv("GIT_CONFIG")
+	git_global_config := os.Getenv("GIT_CONFIG_GLOBAL")
+	git_config_nosystem := os.Getenv("GIT_CONFIG_NOSYSTEM")
+
+	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	os.Setenv("GIT_CONFIG", "/dev/null")
+	os.Setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+
+	DeferCleanup(func() {
+		os.Setenv("GIT_CONFIG_NOSYSTEM", git_config_nosystem)
+		os.Setenv("GIT_CONFIG", git_config)
+		os.Setenv("GIT_CONFIG_GLOBAL", git_global_config)
+	})
+})
+
 var _ = Describe("Git Resource", func() {
 	var run = func(args ...string) error {
 		// discard log output
@@ -431,7 +447,7 @@ var _ = Describe("Git Resource", func() {
 		})
 	})
 
-	Context("failure diagnostics", func() {
+	Context("failure diagnostics", Label("error-details"), func() {
 		const (
 			exampleSSHGithubRepo         = "git@github.com:shipwright-io/sample-go.git"
 			nonExistingSSHGithubRepo     = "git@github.com:shipwright-io/sample-go-nonexistent.git"
